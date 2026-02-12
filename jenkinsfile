@@ -15,7 +15,7 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git 'https://github.com/KastroVKiran/DevOps-Project-Swiggy.git'
+                git 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
             }
         }
         stage("Sonarqube Analysis "){
@@ -52,22 +52,22 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'docker-creds', toolName: 'docker'){   
+                   withDockerRegistry(credentialsId: 'prashikrk', toolName: 'docker'){   
                        sh "docker build -t swiggy ."
-                       sh "docker tag swiggy kastrov/swiggy:latest "
-                       sh "docker push kastrov/swiggy:latest "
+                       sh "docker tag swiggy prk/swiggy:latest "
+                       sh "docker push prk/swiggy:latest "
                     }
                 }
             }
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image kastrov/swiggy:latest > trivy.txt" 
+                sh "trivy image prk/swiggy:latest > trivy.txt" 
             }
         }
         stage('Deploy to container'){
             steps{
-                sh 'docker run -d --name swiggy -p 3000:3000 kastrov/swiggy:latest'
+                sh 'docker run -d --name swiggy -p 3000:3000 prk/swiggy:latest'
             }
         }
     }
