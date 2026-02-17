@@ -52,7 +52,7 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'prashikrk', toolName: 'docker'){   
+                   withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker'){   
                        sh "docker build -t swiggy ."
                        sh "docker tag swiggy prk/swiggy:latest "
                        sh "docker push prk/swiggy:latest "
