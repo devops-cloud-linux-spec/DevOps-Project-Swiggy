@@ -20,7 +20,7 @@ pipeline {
 
         stage('Checkout from Git') {
             steps {
-                git 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
+                git branch: 'master', url: 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
             }
         }
 
