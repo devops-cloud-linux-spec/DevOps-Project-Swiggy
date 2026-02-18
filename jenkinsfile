@@ -62,12 +62,12 @@ pipeline{
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image prk/swiggy:latest > trivy.txt" 
+                sh "trivy image prashikrk/swiggy:latest > trivy.txt" 
             }
         }
         stage('Deploy to container'){
             steps{
-                sh 'docker run -d --name swiggy -p 3000:3000 prk/swiggy:latest'
+                sh 'docker run -d --name swiggy -p 3000:3000 prashikrk/swiggy:latest'
             }
         }
     }
