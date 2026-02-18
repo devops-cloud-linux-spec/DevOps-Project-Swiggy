@@ -5,7 +5,7 @@ pipeline{
         nodejs 'node23'
     }
     environment {
-        SCANNER_HOME=tool 'SonarQube'
+        SCANNER_HOME=tool 'sonar-scanner'
     }
     stages {
         stage('clean workspace'){
@@ -20,7 +20,7 @@ pipeline{
         }
         stage("Sonarqube Analysis "){
             steps{
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('sonar-scanner') {
                     sh '''sonar-scanner -Dsonar.projectKey=Swiggy -Dsonar.projectName=Swiggy \
                     -Dsonar.projectKey=Swiggy '''
                 }
