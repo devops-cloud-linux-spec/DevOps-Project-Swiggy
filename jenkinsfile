@@ -18,9 +18,9 @@ pipeline{
                 git 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
             }
         }
-        stage("Sonarqube Analysis "){
+        stage("SonarQube Analysis "){
             steps{
-                withSonarQubeEnv('sonar-scanner') {
+                withSonarQubeEnv('SonarQube') {
                     sh '''sonar-scanner -Dsonar.projectKey=Swiggy -Dsonar.projectName=Swiggy \
                     -Dsonar.projectKey=Swiggy '''
                 }
