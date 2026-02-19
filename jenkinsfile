@@ -52,7 +52,7 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'prashikrk', toolName: 'docker'){   
+                   withDockerRegistry([credentialsId: 'prashikrk']){   
                        sh "docker build -t swiggy ."
                        sh "docker tag swiggy prashikrk/swiggy:latest "
                        sh "docker push prashikrk/swiggy:latest "
@@ -67,7 +67,7 @@ pipeline{
         }
         stage('Deploy to container'){
             steps{
-                sh 'docker run -d --name swiggy -p 3000:3000 prashikrk/swiggy:latest'
+                sh 'docker run -d --name swiggy -p 3007:3000 prashikrk/swiggy:latest'
             }
         }
     }
