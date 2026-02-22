@@ -14,6 +14,7 @@ In this **real-time DevOps project**, I demonstrate how to **deploy a Swiggy Clo
 ---
 
 
+![Uploading Screenshot 2026-02-19 163400.png…]()
 
 
 
