@@ -11,20 +11,5 @@ In this **real-time DevOps project**, I demonstrate how to **deploy a Swiggy Clo
 6. **Trivy** ![Trivy](https://img.shields.io/badge/Trivy-00979D?style=flat-square&logo=trivy&logoColor=white)
 7. **Docker & DockerHub** ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) ![DockerHub](https://img.shields.io/badge/DockerHub-2496ED?style=flat-square&logo=docker&logoColor=white)
 
----
-
-
-![Uploading Screenshot 2026-02-19 163400.png…]()
-
-
-
----
-
- 
-
-
----
-
-
 
 
