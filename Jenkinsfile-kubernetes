@@ -64,9 +64,9 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry([credentialsId: 'prashikrk']) {
-                        sh "docker build -t swiggy ."
-                        sh "docker tag swiggy prashikrk/swiggy:latest"
+                        sh "docker build -t prashikrk/swiggy:latest ."
                         sh "docker push prashikrk/swiggy:latest"
+ 
                     }
                 }
             }
