@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'jdk17'
+        nodejs 'node23'
+    }
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        IMAGE = "prashikrk/swiggy:latest"
+        KUBE_CREDS = 'kubeconfig'
+    }
+
+    stages {
+
+        stage('Clean & Checkout') {
+            steps {
+                cleanWs()
+                git 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
+            }
+        }
+
+        stage("Sonarqube Analysis") {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=Swiggy \
+                    -Dsonar.projectKey=Swiggy
+                    '''
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+
+        stage('TRIVY FS SCAN') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+
+        stage('Build & Push Docker') {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: 'prashikrk']) {
+                        sh "docker build -t swiggy ."
+                        sh "docker tag swiggy prashikrk/swiggy:latest"
+                        sh "docker push prashikrk/swiggy:latest"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withKubeConfig([credentialsId: KUBE_CREDS]) {
+
+                    // Create namespace if not exists
+                    sh "kubectl create namespace star --dry-run=client -o yaml | kubectl apply -f -"
+
+                    // Apply deployment in that namespace
+                    sh "kubectl apply -f deploy.yml -n star"
+
+                    // Verify rollout
+                    sh "kubectl rollout status deployment/swiggy-deployment -n star"
+                }
+            }
+        }
+    }
+}
