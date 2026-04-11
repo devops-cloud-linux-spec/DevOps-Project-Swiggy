@@ -9,7 +9,7 @@ pipeline {
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
         IMAGE = "prashikrk/swiggy:latest"
-        KUBE_CREDS = 'kubeconfig'
+        K8S_CRED_ID = 'k8s-star-cluster'
     }
 
     stages {
@@ -74,7 +74,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                withKubeConfig([credentialsId: KUBE_CREDS]) {
+                withKubeConfig([credentialsId: K8S_CRED_ID]) {
 
                     // Create namespace if not exists
                     sh "kubectl create namespace star --dry-run=client -o yaml | kubectl apply -f -"
