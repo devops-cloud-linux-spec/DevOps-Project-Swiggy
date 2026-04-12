@@ -13,11 +13,14 @@ RUN npm install
 # Copy the application code
 COPY . .
 
-# Buildinf of the React app
+# Building the React app
 RUN npm run build
 
-# Expose port 3000 to access app
-EXPOSE 80 3000
+# EXPOSE is just documentation; the app must actually listen on 3010
+EXPOSE 3010 80 3000
 
-# Start your Node.js server
+# Ensure the application listens on port 3010
+# If this is a standard React app, you might need to set the PORT env variable
+ENV PORT=3010
+
 CMD ["npm", "start"]
