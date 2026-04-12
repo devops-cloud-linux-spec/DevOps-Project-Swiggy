@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        nodejs 'node23'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        IMAGE = "prashikrk/swiggy:latest"
+        K8S_CRED_ID = 'k8s-star-cluster'
+    }
+    stages {
+        stage('Clean & Checkout') {
+            steps {
+                cleanWs()
+                git 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
+            }
+        }
+        stage("Sonarqube Analysis") {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectName=Swiggy -Dsonar.projectKey=Swiggy"
+                }
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('TRIVY FS SCAN') {
+            steps {
+                // Skips the large XML report to prevent memory issues
+                sh "trivy fs --skip-files '**/dependency-check-report.xml' . > trivyfs.txt"
+            }
+        }
+        stage('Build & Push Docker') {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: 'prashikrk']) {
+                        // Builds using the Dockerfile that EXPOSES 3010
+                        sh "docker build -t ${IMAGE} ."
+                        sh "docker push ${IMAGE}"
+                    }
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                withKubeConfig([credentialsId: "${K8S_CRED_ID}"]) {
+                    sh 'kubectl get ns star --insecure-skip-tls-verify || kubectl create ns star --insecure-skip-tls-verify'
+                    // Forces a rollout so the new image (with port 3010) is pulled
+                    sh 'kubectl apply -f deploy.yml -n star --validate=false --insecure-skip-tls-verify'
+                    sh 'kubectl rollout restart deployment/swiggy-deployment -n star --insecure-skip-tls-verify'
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo "✅ Deployment successful. Access app at http://54.254.118.162:30001"
+        }
+        failure {
+            echo "❌ Pipeline failed"
+        }
+    }
+}
