@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'jdk17'
+        nodejs 'node23'
+    }
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        IMAGE = "prashikrk/swiggy:latest"
+        K8S_CRED_ID = 'k8s-star-cluster'
+    }
+
+    stages {
+        stage('Clean & Checkout') {
+            steps {
+                cleanWs()
+                git 'https://github.com/devops-cloud-linux-spec/DevOps-Project-Swiggy.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+
+        stage("Sonarqube Analysis") {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectName=Swiggy -Dsonar.projectKey=Swiggy"
+                }
+            }
+        }
+
+        stage("quality gate"){
+           steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+
+       stage('TRIVY FS SCAN') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+    steps {
+        // Use double quotes here to resolve the variable value
+        withKubeConfig([credentialsId: "${K8S_CRED_ID}"]) {
+            sh 'kubectl get ns star --insecure-skip-tls-verify || kubectl create ns star --insecure-skip-tls-verify'
+            sh 'kubectl apply -f deploy.yml -n star --validate=false --insecure-skip-tls-verify'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful. Access app at http://<Worker-IP>:30001"
+        }
+        failure {
+            echo "❌ Pipeline failed"
+        }
+    }
+}
